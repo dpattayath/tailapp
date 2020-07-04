@@ -9,27 +9,47 @@ namespace TailApp.Actors
 {
     public class TailActor : UntypedActor
     {
+        private readonly string _filePath;
         private readonly IActorRef _reporterActor;
-        private readonly StreamReader _fileStreamReader;
+        private StreamReader _fileStreamReader;
+        private FileObserver _observer;
 
         public TailActor(string filePath, IActorRef reporterActor)
         {
+            _filePath = filePath;
             _reporterActor = reporterActor;
+        }
 
+        /// <summary>
+        /// initialization logic for actor that will tail changes to a file.
+        /// </summary>
+        protected override void PreStart()
+        {
+            base.PreStart();
+            
             // start watching file for changes
-            FileObserver observer = new FileObserver(Self, Path.GetFullPath(filePath));
-            observer.Start();
+            _observer = new FileObserver(Self, Path.GetFullPath(_filePath));
+            _observer.Start();
             
             // open the file stream with shared read/write permissions
             // (so file can be written to while open)
-            FileStream fileStream = new FileStream(Path.GetFullPath(filePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            FileStream fileStream = new FileStream(Path.GetFullPath(_filePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             _fileStreamReader = new StreamReader(fileStream, Encoding.UTF8);
 
             // read the initial contents of the file and send it to console as first msg
             var text = _fileStreamReader.ReadToEnd();
-            Self.Tell(new InitialRead(filePath, text));
+            Self.Tell(new InitialRead(_filePath, text));
         }
-        
+
+        protected override void PostStop()
+        {
+            _observer.Dispose();
+            _observer = null;
+            _fileStreamReader.Close();
+            _fileStreamReader.Dispose();
+            base.PostStop();
+        }
+
         protected override void OnReceive(object message)
         {
             if (message is FileWrite)

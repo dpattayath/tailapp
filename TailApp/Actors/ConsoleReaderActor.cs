@@ -11,13 +11,6 @@ namespace TailApp.Actors
     {
         public const string StartCommand = "start";
         public const string ExitCommand = "exit";
-        
-        private readonly IActorRef _validationActor;
-
-        public ConsoleReaderActor(IActorRef validationActorRef)
-        {
-            _validationActor = validationActorRef;
-        }
 
         protected override void OnReceive(object message)
         {
@@ -31,7 +24,7 @@ namespace TailApp.Actors
                 Context.System.Terminate();
                 return;
             }
-            _validationActor.Tell(input);
+            Context.ActorSelection("akka://tailAppActorSystem/user/fileValidationActor").Tell(input);
         }
 
         private void DoPrintInstructions()
