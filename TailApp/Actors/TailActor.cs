@@ -7,6 +7,10 @@ using TailApp.Messages;
 
 namespace TailApp.Actors
 {
+    /// <summary>
+    /// Actor handling file watching
+    /// Demonstrating usage of UntypedActor
+    /// </summary>
     public class TailActor : UntypedActor
     {
         private readonly string _filePath;
@@ -31,16 +35,18 @@ namespace TailApp.Actors
             _observer = new FileObserver(Self, Path.GetFullPath(_filePath));
             _observer.Start();
             
-            // open the file stream with shared read/write permissions
-            // (so file can be written to while open)
+            // open the file stream with shared read/write permissions, (so file can be written to while open)
             FileStream fileStream = new FileStream(Path.GetFullPath(_filePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             _fileStreamReader = new StreamReader(fileStream, Encoding.UTF8);
 
             // read the initial contents of the file and send it to console as first msg
             var text = _fileStreamReader.ReadToEnd();
-            Self.Tell(new InitialRead(_filePath, text));
+            Self.Tell(new FileChanged(_filePath, text));
         }
 
+        /// <summary>
+        /// clean up
+        /// </summary>
         protected override void PostStop()
         {
             _observer.Dispose();
@@ -60,18 +66,23 @@ namespace TailApp.Actors
                 var text = _fileStreamReader.ReadToEnd();
                 if (!string.IsNullOrEmpty(text))
                 {
-                    _reporterActor.Tell(text);
+                    _reporterActor.Tell(new FileChanged(_filePath, text));
                 }
             }
             else if (message is FileError)
             {
                 var fe = message as FileError;
-                _reporterActor.Tell(string.Format("Tail error {0}", fe.Reason));
+                _reporterActor.Tell(new InputError($"Tail error {fe.Reason}"));
             }
-            else if (message is InitialRead)
+            else if (message is FileChanged)
             {
-                var ir = message as InitialRead;
-                _reporterActor.Tell(ir.Text);
+                var changed = message as FileChanged;
+                _reporterActor.Tell(changed.Content);
+            }
+            else if (message is StopTail)
+            {
+                _reporterActor.Tell(new InputSuccess($"user ended file watch for {_filePath}"));
+                Context.Stop(Self);
             }
         }
     }

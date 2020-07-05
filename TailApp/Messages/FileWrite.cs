@@ -1,7 +1,7 @@
 namespace TailApp.Messages
 {
     /// <summary>
-    /// Signal that the file has changed, and we need to read the next line of the file.
+    /// Signal that there has been write to the file
     /// </summary>
     public class FileWrite
     {

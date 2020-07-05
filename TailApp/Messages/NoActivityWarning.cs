@@ -1,15 +1,13 @@
-using System;
-
 namespace TailApp.Messages
 {
     /// <summary>
-    /// Base class for signalling that user input was invalid
+    /// Signal no activity warning
     /// </summary>
-    public class InputError
+    public class NoActivityWarning
     {
         public string Reason { get; private set; }
-
-        public InputError(string reason)
+        
+        public NoActivityWarning(string reason)
         {
             Reason = reason;
         }

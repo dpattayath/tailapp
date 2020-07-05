@@ -6,7 +6,6 @@ namespace TailApp.Actors
 {
     /// <summary>
     /// Actor responsible for reading FROM the console. 
-    /// Also responsible for calling <see cref="ActorSystem.Terminate"/>.
     /// </summary>
     public class ConsoleReaderActor : ReceiveActor
     {
@@ -37,7 +36,10 @@ namespace TailApp.Actors
                 Self.Tell(new EndProcessing());
                 return;
             }
-            Context.ActorSelection("akka://tailAppActorSystem/user/fileValidationActor").Tell(input);
+            else
+            {
+                Context.ActorSelection("akka://tailAppActorSystem/user/validationActor").Tell(input);   
+            }
         }
 
         private void DoPrintInstructions()

@@ -20,8 +20,8 @@ namespace TailApp
             Props tailCoordinatorProps = Props.Create(() => new TailCoordinatorActor());
             IActorRef tailCoordinatorActor = MyActorSystem.ActorOf(tailCoordinatorProps, "tailCoordinatorActor");
 
-            Props fileValidatorActorProps = Props.Create(() => new FileValidationActor(writerActorRef));
-            IActorRef fileValidationActor = MyActorSystem.ActorOf(fileValidatorActorProps, "fileValidationActor");
+            Props validatorActorProps = Props.Create(() => new ValidationActor(writerActorRef));
+            IActorRef fileValidationActor = MyActorSystem.ActorOf(validatorActorProps, "validationActor");
 
             Props readerActorProp = Props.Create<ConsoleReaderActor>();
             IActorRef readerActorRef = MyActorSystem.ActorOf(readerActorProp, "consoleReaderActor");

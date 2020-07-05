@@ -1,3 +1,4 @@
+using System;
 using Akka.Actor;
 
 namespace TailApp.Messages
@@ -14,6 +15,11 @@ namespace TailApp.Messages
         {
             FilePath = filePath;
             ReporterActor = reporterActor;
+        }
+
+        public override int GetHashCode()
+        {
+            return FilePath.GetHashCode();
         }
     }
 }

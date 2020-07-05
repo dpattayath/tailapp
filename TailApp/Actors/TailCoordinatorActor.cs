@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using TailApp.Messages;
 
@@ -10,12 +12,16 @@ namespace TailApp.Actors
         {
             if (message is StartTail)
             {
-                var msg = message as StartTail;
+                var msg = (StartTail) message;
                 
-                // here we are creating our first parent/child relationship!
-                // the TailActor instance created here is a child
-                // of this instance of TailCoordinatorActor
-                Context.ActorOf(Props.Create(() => new TailActor( msg.FilePath, msg.ReporterActor)));
+                // the TailActor instance created here is a child of this instance of TailCoordinatorActor
+                Context.ActorOf(Props.Create(() => new TailActor( msg.FilePath, msg.ReporterActor)), $"tailActor-{msg.FilePath.Replace('/','_')}");
+            }
+            else if (message is StopTail)
+            {
+                var msg = (StopTail) message;
+                var child = Context.ActorSelection($"tailActor-{msg.FilePath.Replace('/','_')}");
+                child.Tell(message);
             }
         }
 
@@ -26,8 +32,7 @@ namespace TailApp.Actors
                 TimeSpan.FromSeconds(30), // withinTimeRange
                 x =>
                 {
-                    //Maybe we consider ArithmeticException to not be application critical
-                    //so we just ignore the error and keep going.
+                    // Not relevant but for demonstration - ArithmeticException to not be application critical
                     if (x is ArithmeticException) return Directive.Resume;
 
                     //Error that we cannot recover from, stop the failing actor
