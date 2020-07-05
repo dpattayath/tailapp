@@ -1,5 +1,6 @@
 using System;
 using Akka.Actor;
+using TailApp.Messages;
 
 namespace TailApp.Actors
 {
@@ -35,34 +36,6 @@ namespace TailApp.Actors
                     //In all other cases, just restart the failing actor
                     else return Directive.Restart;
                 });
-        }
-    }
-
-    /// <summary>
-    /// Start tailing the file at user-specified path
-    /// </summary>
-    public class StartTail
-    {
-        public string FilePath { get; private set;  }
-        public IActorRef ReporterActor { get; private set;  }
-
-        public StartTail(string filePath, IActorRef reporterActor)
-        {
-            FilePath = filePath;
-            ReporterActor = reporterActor;
-        }
-    }
-    
-    /// <summary>
-    /// Stop tailing the file at user-specified path
-    /// </summary>
-    public class StopTail
-    {
-        public string FilePath { get; private set;  }
-
-        public StopTail(string filePath)
-        {
-            FilePath = filePath;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Akka.Actor;
 using TailApp.Actors;
+using TailApp.Messages;
 
 namespace TailApp
 {
@@ -26,7 +27,7 @@ namespace TailApp
             IActorRef readerActorRef = MyActorSystem.ActorOf(readerActorProp, "consoleReaderActor");
             
             // tell console reader to begin
-            readerActorRef.Tell(ConsoleReaderActor.StartCommand);
+            readerActorRef.Tell(new StartProcessing());
             
             // blocks the main thread from exiting until the actor system is shut down
             MyActorSystem.WhenTerminated.Wait();

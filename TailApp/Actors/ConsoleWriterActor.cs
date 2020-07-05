@@ -10,6 +10,8 @@ namespace TailApp.Actors
     /// </summary>
     public class ConsoleWriterActor : UntypedActor
     {
+        private DateTime _lastMessageRecevied;
+
         protected override void OnReceive(object message)
         {
             if (message is InputError)
@@ -24,8 +26,18 @@ namespace TailApp.Actors
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(msg.Reason);
             }
+            else if (message is NoActivity)
+            {
+                if (_lastMessageRecevied.AddMinutes(2) < DateTime.Now)
+                {
+                    var msg = (NoActivity) message;
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(msg.Reason);
+                }
+            }
             else
             {
+                _lastMessageRecevied = DateTime.Now;
                 Console.WriteLine(message);
             }
             Console.ResetColor();
