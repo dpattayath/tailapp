@@ -10,6 +10,8 @@ namespace TailApp.Actors
     public class ConsoleWriterActor : ReceiveActor
     {
         private DateTime _lastMessageRecevied;
+        
+        private const ushort WarningTimespanMinutes = 1;
 
         public ConsoleWriterActor()
         {
@@ -25,12 +27,6 @@ namespace TailApp.Actors
                 Console.WriteLine(message.Reason);
                 Console.ResetColor();
             });
-            Receive<NoActivityWarning>(message => _lastMessageRecevied.AddMinutes(2) < DateTime.Now, message =>
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(message.Reason);
-                Console.ResetColor();
-            });
             Receive<FileChanged>(message =>
             {
                 _lastMessageRecevied = DateTime.Now;
@@ -39,7 +35,26 @@ namespace TailApp.Actors
                 Console.ForegroundColor = ConsoleColor.DarkBlue;
                 Console.WriteLine(message.Content);
                 Console.ResetColor();
+                
+                // after initial file change, set a timeout to enable a warning
+                Context.SetReceiveTimeout(TimeSpan.FromMinutes(WarningTimespanMinutes));
             });
+            // handle timeout and issue a warning
+            Receive<ReceiveTimeout>(timeout =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"No file activity for last {WarningTimespanMinutes} minutes, type 'exit' to finish watching or 'ignore' to dismiss the warning.");
+                Console.ResetColor();
+            });
+            Receive<IgnoreWarning>(msg =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"disabled no activity warnings");
+                Console.ResetColor();
+                Context.SetReceiveTimeout(null);
+            });
+            
+            // catch all
             ReceiveAny(message =>
             {
                 Console.ForegroundColor = ConsoleColor.DarkBlue;

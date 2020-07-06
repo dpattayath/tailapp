@@ -77,7 +77,7 @@ namespace TailApp.Actors
             else if (message is FileChanged)
             {
                 var changed = message as FileChanged;
-                _reporterActor.Tell(changed.Content);
+                _reporterActor.Tell(changed);
             }
             else if (message is StopTail)
             {

@@ -13,10 +13,6 @@ namespace TailApp.Actors
     {
         private readonly IActorRef _consoleWriterActor;
 
-        private ICancelable _cancellation;
-        
-        private const ushort WarningTimespanMinutes = 2;
-        
         private List<string> _files = new List<string>();
         
         // added along with the IWithUnboundedStash interface
@@ -56,15 +52,6 @@ namespace TailApp.Actors
                     _consoleWriterActor.Tell(new InputSuccess($"Starting processing for {message}"));
                     Context.ActorSelection("akka://tailAppActorSystem/user/tailCoordinatorActor")
                         .Tell(new StartTail(message, _consoleWriterActor));
-
-                    // schedule to check no activity every 2 minutes
-                    _cancellation = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(
-                        TimeSpan.FromMinutes(WarningTimespanMinutes),
-                        TimeSpan.FromMinutes(WarningTimespanMinutes),
-                        _consoleWriterActor,
-                        new NoActivityWarning($"No file activity for last {WarningTimespanMinutes} minutes, type 'exit' to finish watching or 'ignore' to dismiss the warning."),
-                        ActorRefs.Nobody);
-                    
                     _files.Add(message);
                     
                     // change validator mode to accept commands
@@ -78,8 +65,7 @@ namespace TailApp.Actors
         {
             Receive<string>(s => string.Equals(s, "ignore", StringComparison.OrdinalIgnoreCase), s =>
             {
-                _cancellation.Cancel();
-                _consoleWriterActor.Tell(new InputSuccess("disabled no activity warnings"));
+                _consoleWriterActor.Tell(new IgnoreWarning());
                 Sender.Tell(new ContinueProcessing());
             });
             Receive<string>(s => s.StartsWith("end-", StringComparison.OrdinalIgnoreCase), s =>
